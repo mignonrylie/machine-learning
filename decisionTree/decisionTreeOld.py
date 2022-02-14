@@ -2,8 +2,9 @@ from importlib.machinery import SourcelessFileLoader
 import math
 import csv
 
+
+
 #should already be discretized
-#TODO: generalize for n columns
 def importData(filename): 
     csvData = [[]]
     with open(filename, newline = '') as file:
@@ -22,7 +23,6 @@ def importData(filename):
 
             csvData.append(dataPoint)
 
-    del csvData[0]
     return csvData
         
 importedData = importData("synthetic-1-discrete.csv")
@@ -32,12 +32,13 @@ def entropy(data, toMatch):
     
     i = 0
     for row in data:
-        if row[-1] == toMatch: #assumes class label is last in list
+        if row[-1] == toMatch:
             i += 1
 
     prob = i/len(data)
 
     return prob*math.log(prob, 2)
+
 
 #assume given a list of data points with class labels
 def calculateEntropy(data):
@@ -63,43 +64,74 @@ def calculateEntropy(data):
 
     return sum
 
-def dataIntoLists(data):
-    split = []
+#rework; do not separate from labels, but separate into attributes with each keeping the labels
+def separateDataFromLabels(data):
+    newData = []
+    labels = []
+    for row in data:
+        point = []
+        for index, member in enumerate(row):
+            if index == len(row)-1:
+                labels.append(member) #assumes labels are stored at the end of data
+            else:
+                point.append(member)
+        newData.append(point)
 
-    for index in range(len(data[0])): #assuming each data point is the same length; should be!
-        newList = []
-        for row in data:
-            newList.append(row[index])
-        split.append(newList)
+    del newData[0]
+    return newData, labels
 
-    return split
+data, labels = separateDataFromLabels(importedData)
+#print(data)
+#print(labels)
 
-data = dataIntoLists(importedData)
-print(data)
+#could combine with separateDataFromLabels function
+#TODO: associate each attribute with its class label
+def splitDataIntoAttributes(data):
+    attributes = [[]]
+    for index in range(len(data[0])): #-1 to not add the class label, we'll go back in and do that
+        attributes.append([])
+    for point in data:
+        for index, value in enumerate(point):
+            attributes[index].append(value)
+            #we should create a point within this
+            #append [[value, label]] to index
 
-def splitValues(attribute, labels):
-    seenValues = []
-    values = [[]]
+    return attributes
 
-    for index, value in attribute:
-        #temp = [[value], [classlabel]]
-
-        #if value has been seen:
-            #values[value][0]
-
-        #if value has not been seen:
-
-
-
-
-        pass
+attributes = splitDataIntoAttributes(data)
+#print(attributes)
 
 
-#calculates information gain for one attribute
-def informationGain(col, data): #given as column number of dataset, data being the entire data set
-    attribute = data[col]
-    labels = data[-1] #assumes labels are the end of the data
+#take in data and perform this on each attribute?
+def generateValueSubsets(attribute): #attribute as its own list
 
+
+
+    subsets = [[]]
+    values = [attribute[0]]
+    for point in attribute:
+        seen = False
+        #for index, value in enumerate(values):
+        for index, value in enumerate(values):
+            if point == value:
+                seen = True
+                #add that data point to the corresponding subset
+                subsets[index].append(point)
+        if not seen:
+            values.append(point)
+            subsets.append([])
+
+    for index, sets in enumerate(subsets):
+        if sets == []:
+            del subsets[index]
+
+    return subsets
+
+print(attributes[0])
+subsets = generateValueSubsets(attributes[0])
+print(subsets)
+
+def informationGain(attribute, data): #attribute represented as its own list, data being the entire data set
     #must use entire data set since that's how entropy function is written
     #may want to rewrite entropy function to just work with the class labels?
 
@@ -124,22 +156,7 @@ def informationGain(col, data): #given as column number of dataset, data being t
     #inside sum, for each value:
     #for each value, (number of points with that value/total points)*entropy(points with that value)
 
-    #each value will have
-
-    #count values for the attribute:
-    #for each attribute:
-        #if it's a value we've already seen
-            #add the value+label
-
     pass
-
-
-
-
-
-
-
-
 
 #positive = 1
 #negative = 0
@@ -161,7 +178,6 @@ def informationGain(col, data): #given as column number of dataset, data being t
 #	End
 #Return Root
 
-#at each iteration split into [[target_attribute], [other_attributes], [class_label]]
 #examples = class labels
 
 def findMajority(data, col):
@@ -171,9 +187,9 @@ class Node:
     def __init__(self, attribute, data): #self is not passed in. #how should attribute be represented? column number?
         self.left = None
         self.right = None
-        self.attribute = None #attribute that we're splitting on. is null in the leaf.
-        self.label = None #label that is assigned. is null in internal nodes.
-        self.data = data #copy of all the data (minus the attributes we've already split on?)
+        self.attribute = None
+        self.label = None
+        self.data = data 
 
         self.classLabels = []
         self.allOne = True
@@ -184,8 +200,6 @@ class Node:
                 self.allOne = False
             elif point[-1] == 1: #this if is redundant for binary class labels
                 self.allZero = False
-
-
     def id3(self):
         #self.left and self.right assigned later
         if self.allOne:
