@@ -16,21 +16,45 @@ def importData(filename):
     with open(filename, newline = '') as file:
         reader = csv.reader(file, delimiter = ',')
         
-        for row in reader:
+        for index, row in enumerate(reader):
             if row == []:
                 continue
             
             dataPoint = []
-            dataPoint.append(int(row[0]))
-            dataPoint.append(int(row[1]))
-            dataPoint.append(int(row[2]))
+            if index == 0: #stores labels in first row
+                for entry in row:
+                    dataPoint.append(entry)
+                
+            else:
+                for entry in row:
+                    try:
+                        dataPoint.append(int(entry))
+                    except ValueError:
+                        dataPoint.append(int(eval(entry)))
+                    except:
+                        print("I don't know what happened")
+                    
 
             csvData.append(dataPoint)
 
     del csvData[0]
     return csvData
         
-importedData = importData("synthetic-1-discrete.csv")
+importedData = importData("pokemonStats.csv")
+
+labels = importData("pokemonLegendary.csv")
+
+def appendLabels(data, labels):
+    appended = []
+
+    for index, row in enumerate(data):
+        row.append(labels[index][0])
+        appended.append(row)
+
+    return appended
+
+data = appendLabels(importedData, labels)
+print(data)
 
 def colToList(given, index):
     newList = []
