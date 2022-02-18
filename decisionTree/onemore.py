@@ -17,6 +17,7 @@
 #    Return Root
 
 import csv
+from inspect import Attribute
 from math import log2
 from anytree import Node, RenderTree
 import anytree
@@ -296,43 +297,173 @@ def draw(data):
 
 
 
-#files = ["synthetic-1-discrete.csv", "synthetic-2-discrete.csv", "synthetic-3-discrete.csv", "synthetic-4-discrete.csv"]
+files = ["synthetic-1-discrete.csv", "synthetic-2-discrete.csv", "synthetic-3-discrete.csv", "synthetic-4-discrete.csv"]
+trees = []
+datas = []
 
-
-#for index, file in enumerate(files):
-#    data = None
-#    root = None
-#    data = importData(file)
-#    root = id3(data, -1, [0,1])
-#    print(file + ":")
-#    print(RenderTree(root))
+for index, file in enumerate(files):
+    data = None
+    root = None
+    data, nontitles = importData(file)
+    root = id3(data, -1, [0,1])
+    datas.append(data)
+    trees.append(root)
+    #print(file + ":")
+    #print(RenderTree(root))
 #    draw(data)
 
-print("synthetic:")
-nondata, nontitles = importData("synthetic-1-discrete.csv")
-nonroot = id3(nondata, -1, [0,1])
-print(RenderTree(nonroot))
+#print("synthetic:")
+#nondata, nontitles = importData("synthetic-1-discrete.csv")
+#nonroot = id3(nondata, -1, [0,1])
+#print(RenderTree(nonroot))
 
 
-print("poke:")
-data, title = importData("pokemonStats-discrete-TEST.csv")
-del data[0]
-root = id3(data, -1, [x for x in range(len(data[0])-1)], titles=title)
-print(RenderTree(root))
-
-print(root.children)
+#data, title = importData("pokemonStats-discrete-TEST.csv")
+#del data[0]
+#datas.append(data)
+#root = id3(data, -1, [x for x in range(len(data[0])-1)], titles=title)
+#trees.append(root)
 
 
 
-#evaluating a test example:
-#follow the tree:
+
+
+
+
+
+
+
+
+def predict(tree, example):
+    #follow the tree:
     #look at the attribute: whatever that value is in the example, go to the corresponding child
     #if there is no attribute (no child), get the value of the example, and return the corresponding label
+    while tree.children != (): #only nodes with children should have attributes
+        try:
+            attribute = tree.attribute
+            value = example[attribute]
+            for child in tree.children:
+                if child.value == value:
+                    tree = child
+        except AttributeError: #hopefully redundant
+            print(tree)
+            print(tree.children)
+            break
+    return tree.label
 
-def testExample(tree, example):
-    while(tree.attribute is not None):
-        for child in tree.children:
-            if child.value == example[tree.attribute]:
-                tree = child
+def evaluate(tree, example):
+    if predict(tree, example) == example[-1]:
+        return True
+    return False
 
+def treeAccuracy(tree, data):
+    correct = 0
+    incorrect = 0 #redundant
+    for example in data:
+        if evaluate(tree, example):
+            correct += 1
+        else:
+            incorrect += 1
+    if correct + incorrect != len(data):
+        print("something has gone wrong! wrong num of examples?")
+        return None
+    return correct / len(data)
+
+
+
+
+
+
+
+
+
+
+def fold(data, k):
+    #set aside 1/k of the examples for testing
+    #the rest are training
+    subsets = []
+    testing = []
+    num = len(data) // k
+    remainder = len(data) % k
+    remainders = []
     
+    for i in range(k): #reserve the last fold for testing
+        begin = i*num
+        end = (i+1)*num
+        fold = []
+        for j in range(begin, end):
+            fold.append(data[j])
+        subsets.append(fold)
+
+    #for i in range(num*(k-1), num*k):
+    #    testing.append(data[i])
+
+    if remainder != 0: #distributes remainders across sets
+        count = 0;
+        #print("setting remainders")
+        #print(num*k, num*k+remainder)
+        for i in range(num*k, num*k+remainder):
+            subsets[count%k].append(data[i])
+            count += 1
+
+    return subsets
+
+
+
+def kFolds(data, k):
+    subsets = fold(data, k)
+    allsets = []
+    
+    for test in range(k): #determines
+        testing = []
+        training = []
+        ttset = []
+        for i in range(k):
+            if i == test:
+                testing = subsets[i]
+            else:
+                training.extend(subsets[i])
+        ttset.append(training)
+        ttset.append(testing)
+        allsets.append(ttset)
+
+    return allsets
+
+a = [x for x in range(20)]
+b = fold(a, 3)
+c = kFolds(a, 3)
+#print(a)
+#print(b)
+#print(c)
+
+#for each k-fold
+#generate a tree and find its accuracy
+#pick best tree\
+
+def generateOptimalTree(data, k):
+    folds = kFolds(data, k)
+    #trees = []
+    bestAccuracy = -1
+    bestTree = None
+    for fold in folds:
+        tree = id3(fold[0], -1, [x for x in range(len(data[0])-1)])
+        #trees.append(tree)
+        if treeAccuracy(tree, fold[1]) > bestAccuracy:
+            bestTree = tree
+
+    return bestTree, bestAccuracy
+
+
+folds = kFolds(datas[0], 2)
+print(folds)
+print("#############")
+print(folds[0])
+print("#############")
+print(folds[0][0])
+
+
+
+#print(datas[0])
+best, acc = generateOptimalTree(datas[0], 2)
+print("best accuracy is :" + str(acc))
+print(RenderTree(best))
