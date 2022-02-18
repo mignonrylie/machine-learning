@@ -34,16 +34,23 @@ def importData(filename):
         
         for index, row in enumerate(reader):
             dataPoint = []
-            if index == 0:
-                for point in row:
-                    titles.append(point)
+
+            if filename == "pokemonStats-discrete-TEST.csv":
+                if index == 0:
+                    for point in row:
+                        titles.append(point)
+                else:
+                    for point in row:
+                        dataPoint.append(point)
+
             else:
                 for point in row:
                     dataPoint.append(point)
 
             csvData.append(dataPoint)
 
-    addLabels(csvData)
+    if filename == "pokemonStats-discrete-TEST.csv":
+        addLabels(csvData)
     return csvData, titles
 
 def addLabels(data):
@@ -53,7 +60,6 @@ def addLabels(data):
 
         for index, row in enumerate(reader2):
             if index != 0:
-                print(type(str(row)))
                 data[index].append(eval(str(row)))
     
 
@@ -166,19 +172,23 @@ def informationGain(examples, attribute, target):
 #titles is for the csv column names, like in pokemonStats
 def id3(examples, target, attributes,  givenParent = None, givenValue = None, titles = None):
     #root = Node("", parent = givenParent, depth = 0)
-    print("creating node")
     if givenParent is None:
         root = Node("", parent = None, depth = 0)
     else:
         root = Node("", parent = givenParent, depth = givenParent.depth + 1)
 
+    #I wanted to initalize depth this way too, but I ran into 'can't set attribute' for some reason.
+    if givenValue is not None:
+        root.value = givenValue
+
     if root.depth == 2:
         root.label = mostCommon(examples, target)
         return root
     
-    #I wanted to initalize depth this way too, but I ran into 'can't set attribute' for some reason.
-    if givenValue is not None:
-        root.value = givenValue
+    
+
+
+
     #only internal nodes should have attributes
     #only leaves should have labels
 
@@ -217,11 +227,12 @@ def id3(examples, target, attributes,  givenParent = None, givenValue = None, ti
         root.attribute = bestAttribute #set the attribute that we're splitting on
         values = uniqueList([x[bestAttribute] for x in examples])
         #print(values)
+        if titles is not None:
+            root.title = titles[root.attribute]
 
         for value in values:
             subset = getSubset(examples, bestAttribute, value)
-            #print(subset)
-            id3(subset, target, [x for x in attributes if x != bestAttribute], root, value)
+            id3(subset, target, [x for x in attributes if x != bestAttribute], root, value, titles)
             #create a child; its examples will be the subset of parent's examples with that value
             #child(examples(value), target)
             #here is where you would set most common label if you weren't going to pass on any examples
@@ -297,9 +308,31 @@ def draw(data):
 #    print(RenderTree(root))
 #    draw(data)
 
+print("synthetic:")
+nondata, nontitles = importData("synthetic-1-discrete.csv")
+nonroot = id3(nondata, -1, [0,1])
+print(RenderTree(nonroot))
 
-data, titles = importData("pokemonStats-discrete-TEST.csv")
+
+print("poke:")
+data, title = importData("pokemonStats-discrete-TEST.csv")
 del data[0]
-print(data[0])
-root = id3(data, -1, [x for x in range(len(data[0])-1)])
+root = id3(data, -1, [x for x in range(len(data[0])-1)], titles=title)
 print(RenderTree(root))
+
+print(root.children)
+
+
+
+#evaluating a test example:
+#follow the tree:
+    #look at the attribute: whatever that value is in the example, go to the corresponding child
+    #if there is no attribute (no child), get the value of the example, and return the corresponding label
+
+def testExample(tree, example):
+    while(tree.attribute is not None):
+        for child in tree.children:
+            if child.value == example[tree.attribute]:
+                tree = child
+
+    
