@@ -11,6 +11,10 @@ import numpy as np
 #data is read in correctly
 #id3 > bestAttribute > informationGain > entropy > colToList(wrong)
 
+
+#TODO: turn attribute labels into enumeration
+#TODO: visualization
+
 def importData(filename): 
     csvData = [[]]
     with open(filename, newline = '') as file:

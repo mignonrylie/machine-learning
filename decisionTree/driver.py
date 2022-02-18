@@ -1,6 +1,4 @@
 from posixpath import split
-from re import U
-from tkinter import Y
 import decisionTree2 as tree
 #from anytree import Node, RenderTree
 import anytree
