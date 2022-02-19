@@ -24,7 +24,7 @@ import anytree
 import matplotlib.pyplot as plt
 import numpy as np
 
-import decisionTree2 as tree
+#import decisionTree2 as tree
 
 #working as expected
 def importData(filename): 
@@ -48,7 +48,8 @@ def importData(filename):
                 for point in row:
                     dataPoint.append(point)
 
-            csvData.append(dataPoint)
+            if dataPoint != []:
+                csvData.append(dataPoint)
 
     if filename == "pokemonStats-discrete-TEST.csv":
         addLabels(csvData)
@@ -60,7 +61,7 @@ def addLabels(data):
 
 
         for index, row in enumerate(reader2):
-            if index != 0:
+            if index != 0 and not(index >= len(data)):
                 data[index].append(eval(str(row)))
     
 
@@ -238,6 +239,7 @@ def id3(examples, target, attributes,  givenParent = None, givenValue = None, ti
             #child(examples(value), target)
             #here is where you would set most common label if you weren't going to pass on any examples
 
+
     return root
 
 #############################################################3
@@ -297,20 +299,6 @@ def draw(data):
 
 
 
-files = ["synthetic-1-discrete.csv", "synthetic-2-discrete.csv", "synthetic-3-discrete.csv", "synthetic-4-discrete.csv"]
-trees = []
-datas = []
-
-for index, file in enumerate(files):
-    data = None
-    root = None
-    data, nontitles = importData(file)
-    root = id3(data, -1, [0,1])
-    datas.append(data)
-    trees.append(root)
-    #print(file + ":")
-    #print(RenderTree(root))
-#    draw(data)
 
 #print("synthetic:")
 #nondata, nontitles = importData("synthetic-1-discrete.csv")
@@ -338,16 +326,29 @@ def predict(tree, example):
     #follow the tree:
     #look at the attribute: whatever that value is in the example, go to the corresponding child
     #if there is no attribute (no child), get the value of the example, and return the corresponding label
-    while tree.children != (): #only nodes with children should have attributes
+    while tree.is_leaf is False: #only nodes with children should have attributes
         try:
             attribute = tree.attribute
             value = example[attribute]
+            found = False
             for child in tree.children:
                 if child.value == value:
                     tree = child
+                    found = True
+
+            #if we reach this point, no value matched. in this case we just assign it to the closest value
+            if not found:
+                difference = 10000
+                closestChild = tree.children[0]
+                for child in tree.children:
+                    if abs(float(child.value) - float(value)) < difference:
+                        difference = abs(float(child.value) - float(value))
+                        closestChild = child
+                tree = closestChild
+
         except AttributeError: #hopefully redundant
-            print(tree)
-            print(tree.children)
+            #print(tree)
+            #print(tree.children)
             break
     return tree.label
 
@@ -443,27 +444,22 @@ c = kFolds(a, 3)
 def generateOptimalTree(data, k):
     folds = kFolds(data, k)
     #trees = []
-    bestAccuracy = -1
+    bestAccuracy = 0.0
     bestTree = None
     for fold in folds:
-        tree = id3(fold[0], -1, [x for x in range(len(data[0])-1)])
-        #trees.append(tree)
-        if treeAccuracy(tree, fold[1]) > bestAccuracy:
+        tree = id3(fold[0], -1, [x for x in range(len(data[1])-1)]) #originally
+        accuracy = treeAccuracy(tree, fold[1])
+        if accuracy > bestAccuracy:
             bestTree = tree
+            bestAccuracy = accuracy
 
     return bestTree, bestAccuracy
 
-
-folds = kFolds(datas[0], 2)
-print(folds)
-print("#############")
-print(folds[0])
-print("#############")
-print(folds[0][0])
+#data = datas[0]
+#folds = kFolds(data, 2)
+#tree = id3(folds[0], -1, [x for x in range(len(data[0])-1)])
+#print("test")
+#print(treeAccuracy(tree, folds[1]))
 
 
 
-#print(datas[0])
-best, acc = generateOptimalTree(datas[0], 2)
-print("best accuracy is :" + str(acc))
-print(RenderTree(best))
