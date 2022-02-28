@@ -187,7 +187,7 @@ temp = []
 for row in fullyDiscrete:
     temp.append(row[17])
 
-print([temp[i] for i in range(10)])
+#print([temp[i] for i in range(10)])
 
 #print(fullyDiscrete)
 #print("#########################")
