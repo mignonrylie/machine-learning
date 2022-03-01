@@ -1,1 +1,0 @@
-#may want to do feature scaling - normalization?
