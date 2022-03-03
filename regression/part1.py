@@ -72,6 +72,7 @@ def overallError(data, weights):
         sum += rawError(point, weights)**2
     return sum / len(data)
 
+#TODO: update to match other file
 def updateAllWeights(alpha, data, weights):
     newWeights = []
     for index, weight in enumerate(weights):
@@ -108,6 +109,9 @@ def toNumbers(data):
 
 data = toNumbers(data)
 
+#print(data)
+#print(data)
+
 #print(titles)
 #print(data)
 weights = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] #t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11
@@ -127,7 +131,7 @@ print(newWeights)
 fig, ax = plt.subplots()
 ax.scatter([x[0] for x in data], [x[1] for x in data])
 
-#plt.show()
+plt.show()
 
 
 
