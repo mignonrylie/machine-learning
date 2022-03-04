@@ -123,22 +123,3 @@ while overallError(data, newWeights) > 100:
 
 print(overallError(data, newWeights))
 print(newWeights)
-
-fig, ax = plt.subplots()
-ax.scatter([x[0] for x in data], [x[1] for x in data])
-
-#plt.show()
-
-
-
-
-def graph(formula, x_range):  
-    x = np.array(x_range)  
-    y = formula(x)  # <- note now we're calling the function 'formula' with x
-    plt.plot(x, y)  
-    plt.show()  
-
-def my_formula(x):
-
-
-    return x**3+2*x-4

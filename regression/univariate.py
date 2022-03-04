@@ -2,6 +2,8 @@ import preprocess as pp
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import make_interp_spline
+import random
+import os
 #synthetic-1 and synthetic-2 are single-input datasets, i.e. univariate regression
 #for univariate regression, h(x) = h_t(x) = t_0 + t_1*x
 #choose parameters t such that the difference between h_t(x) and y is minimized
@@ -95,9 +97,13 @@ def toNumbers(data):
     return clean
 
 
-data = pp.readCSV("data/synthetic-1.csv")
+data = pp.readCSV("data/synthetic-2.csv")
 data = toNumbers(data)
 
+print(data)
+data = pp.squish(data)
+#data = pp.standardize(data)
+print(data)
 
 
 numWeights = [2, 3, 5]
@@ -109,10 +115,11 @@ for num in numWeights:
         newset.append(0)
     polyweights.append(newset)
 
-a = 0.00001
+a = 0.000000001
 
 newPolyWeights = []
 for weightSet in polyweights:
+    print(weightSet)
     newWeights = []
     #newWeights = updateAllWeights(a, data, weightSet)
     newWeights = fullBatch(data, weightSet, a)
@@ -120,6 +127,14 @@ for weightSet in polyweights:
     #for i in range(10):
         #newWeights = updateAllWeights(a, data, weightSet)
         newWeights = fullBatch(data, a, weightSet)
+    newWeights = updateAllWeights(a, data, weightSet)
+    print(newWeights)
+    while overallError(data, newWeights) > .5:
+    #for i in range(10):
+        newWeights = updateAllWeights(a, data, weightSet)
+        print(newWeights)
+        input("press enter for next step")
+        os.system('read -s -n 1 -p "Press any key to continue..."')
 
     print(overallError(data, newWeights))
     newPolyWeights.append(newWeights)
@@ -128,6 +143,10 @@ for weightSet in polyweights:
 poly0 = polyweights[0]
 poly1 = polyweights[1]
 poly2 = polyweights[2]
+
+print(poly0)
+print(poly1)
+print(poly2)
 
 
 def calculateGuess(point, weights):

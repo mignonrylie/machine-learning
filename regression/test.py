@@ -26,6 +26,11 @@ def toNumbers(data):
         clean.append(cleanPoint)
     return clean
 
+def retrieveColumn(givenList, col):
+    column = []
+    for point in givenList:
+        column.append(point[col])
+    return column
 
 #visualize
 def visualize(data, weights):
