@@ -37,10 +37,10 @@ def MSE(data, weights, theta): #pass in a data set-*, row of 11 features + label
     for point in data:
         #error = rawError(point, bias, weights)
         error = rawError(point, weights)
-        if theta == 0:
-            sum += error
-        else:
-            sum += error * point[0]
+        #if theta == 0:
+        #    sum += error
+        #else:
+        sum += error * point[0]**theta 
         #sum += error^2
         #x = hypothesis(point, bias, weights)
         #difference = point[-1] - x
@@ -50,6 +50,18 @@ def MSE(data, weights, theta): #pass in a data set-*, row of 11 features + label
 #gradient descent to update weights:
 #t_j = t_j - a d/dt_j J(t)*x_j (if j=0, x_j = 1. otherwise x_j = feature j of input example x)
 #where t_j is the given parameter, a (0<a<1) is the learning rate, and d/dt_j is the partial derivative of J(t) w.r.t. the given parameter
+def fullBatch(data, weights, alpha):
+    newWeights = []
+    for theta, weight in enumerate(weights):
+        all = 0
+        for point in data:
+            all += MSE(data, weights, theta)
+        gradient = all / len(data)
+        newWeights.append(weight - alpha*gradient)
+    return newWeights
+
+
+
 def updateWeight(alpha, data, weights, j):
     theta = weights[j]
     #error = MSE(data, bias, weights, j)
@@ -94,7 +106,7 @@ polyweights = []
 for num in numWeights:
     newset = []
     for i in range(num+1):
-        newset.append(0.1)
+        newset.append(0)
     polyweights.append(newset)
 
 a = 0.00001
@@ -102,10 +114,12 @@ a = 0.00001
 newPolyWeights = []
 for weightSet in polyweights:
     newWeights = []
-    newWeights = updateAllWeights(a, data, weightSet)
+    #newWeights = updateAllWeights(a, data, weightSet)
+    newWeights = fullBatch(data, weightSet, a)
     while overallError(data, newWeights) > 1000:
     #for i in range(10):
-        newWeights = updateAllWeights(a, data, weightSet)
+        #newWeights = updateAllWeights(a, data, weightSet)
+        newWeights = fullBatch(data, a, weightSet)
 
     print(overallError(data, newWeights))
     newPolyWeights.append(newWeights)
@@ -129,7 +143,7 @@ def createPoints(datax, weights):
     return ys
 
 
-fig, ax = plt.subplots()
+#fig, ax = plt.subplots()
 
 xaxis = np.array([x[0] for x in data])
 yaxis = np.array([x[1] for x in data])
@@ -150,10 +164,10 @@ y = X_Y_Spline(x)
 
 
 
-ax.scatter(xaxis, yaxis)
-plt.plot(x, y)
+#ax.scatter(xaxis, yaxis)
+#plt.plot(x, y)
 
-plt.show()
+#plt.show()
 
 #graph(lambda x: poly0[0] + poly0[1]*x + poly0[2]*(x**2), np.arange(min(xaxis), max(xaxis)))
 #graph(lambda x: poly1[0] + poly1[1]*x + poly1[2]*(x**2) + poly1[3]*(x**3), np.arange(min(xaxis), max(xaxis)))
