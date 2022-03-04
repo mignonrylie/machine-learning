@@ -134,7 +134,15 @@ def generateModel(data, weights, alpha, error, delta):
 newWeights = []
 errors = []
 errorBound = 50
-benchmarks = [35, .5, 10, .5, 10, .5]
+
+benchmarks = [35, .5, 10, .5, 10, .5] #original benchmarks
+benchmarks = [35, .1, 10, .1, 10, .1]
+giveUp = 1e-300
+alpha = 0.0000000001
+
+
+#i can only get results when I use absurdly small alpha values and a pretty small "give up" boundary too
+#in either case, just being below the benchmark isn't enough. I have to be considerably below it (for set 2) if i want the model to train.
 
 #train each model
 for index, weightSet in enumerate(weights):
@@ -147,4 +155,4 @@ titles = ["synthetic-1.csv", "synthetic-2.csv"]
 for index, weightSet in enumerate(newWeights):
     print(weightSet)
     print(errors[index])
-    visualize(data[index%2], weightSet, titles[index%2])
+    visualize(data[index%2], weightSet, titles[index%2] + " - n = " + str(len(weightSet)-1))

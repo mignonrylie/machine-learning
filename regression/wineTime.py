@@ -49,15 +49,10 @@ def generateModel(data, weights, alpha, error, delta):
             alpha *= 1.5
     return weights, err
 
-print(data[0][-1])
-print(hypothesis(data[0], weights))
-
 benchmark = 1.5
 alpha = 1e-10
 error = benchmark
 giveUp = 1e-7
-
-print(overallError(data, weights))
 
 weights, err = generateModel(data, weights, alpha, error, giveUp)
 

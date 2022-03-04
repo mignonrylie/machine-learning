@@ -112,11 +112,6 @@ def overallError(data, weights):
     guesses = [hypothesis(point, weights) for point in data]
     return mean_squared_error(ans, guesses)
 
-    sum = 0
-    for point in data:
-        sum += rawError(point, weights)**2
-        #sum += mean_squared_error([point[-1]], [hypothesis(point, weights)])
-    return sum / len(data)
 
 def generateModel(data, weights, alpha, error, delta):
     #print(data)
