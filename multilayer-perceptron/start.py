@@ -77,6 +77,7 @@ def importData(filename):
 
 
 #randomly initialize weights
+
 hiddenWeights = np.random.uniform(-1, 1, size=(785, 28))
 if zeroToFour:
     outputWeights = np.random.uniform(-1, 1, size=(28, 5))
@@ -84,20 +85,19 @@ else:
     outputWeights = np.random.uniform(-1, 1, size=(28, 2))
 
 
-
 #feed forward an input through the NN, 'making a guess' 
 def feedForward(point):
     #feed into hidden layer
-    hiddenInputs = np.dot(hiddenWeights.T, point)
+    hiddenInputs = np.dot(hiddenWeights.T, point) #TRANSPOSE
     #output of hidden layer's activation
     hiddenOut = g(hiddenInputs)
 
     #feed into output layer
-    finalInputs = np.dot(outputWeights.T, hiddenOut)
+    finalInputs = np.dot(outputWeights.T, hiddenOut) #TRANSPOSE
     #output of output layer's activation
     finalOut = g(finalInputs)
 
-    return hiddenInputs, finalInputs, finalOut
+    return hiddenInputs, hiddenOut, finalInputs, finalOut
 
 #guess being the output layer
 def getError(guess, point):
@@ -127,30 +127,200 @@ initX = data[0]
 initX[0] = 1
 
 #finalInputs is the hidden activations times the corresponding weights. 
-hiddenInputs, finalInputs, outputNeurons = feedForward(initX)
-
+hiddenInputs, hiddenNeurons, finalInputs, outputNeurons = feedForward(initX)
 
 
 print(outputNeurons)
+#print(outputWeights)
 err = getError(outputNeurons, data[0])
 print(err)
+print()
 
 alpha = 0.1
 
 #updating weights
 updatedWeights = []
-exit()
+
 
 point = data[0]
 
+"""
+print(outputWeights)
+print(outputWeights.shape)
+print(hiddenWeights.shape)
+print(outputNeurons.shape)
+print()"""
 #used here:
 #final (output neurons) - 2x1
 #outputWeights (weights between hidden and output layer) - 28x2
-for neuron, index in enumerate(outputNeurons):
-    for weight in outputWeights[index]:
+"""
+updatedOutputWeights = []
+for index, neuron in enumerate(outputNeurons):
+    newWeights = []
+    for idx, weight in enumerate(outputWeights):
+        if len(updatedOutputWeights) == idx:
+            updatedOutputWeights.append([])
         #for weight associated with neuron:
         #newWeight = weight + alpha * err * gPrime(in) * Xj
         #where in is the input value for the neuron in question
         # and Xj is 
         #point is the data point of comparison
-        newWeight = weight + alpha * err * gPrime(finalInputs[index]) * point[index]
+        newWeight = weight[index] + alpha * err * gPrime(finalInputs[index]) * point[index]
+        #newWeights.append(newWeight)
+        updatedOutputWeights[idx].append(newWeight)
+    #updatedOutputWeights.append(newWeights)
+
+updatedHiddenWeights = []
+for index, neuron in enumerate(hiddenNeurons):
+    newWeights = []
+    for idx, weight in enumerate(hiddenWeights):
+        #if len(updatedHiddenWeights)-1 < idx:
+        if len(updatedHiddenWeights) == idx:
+            updatedHiddenWeights.append([])
+        #for weight associated with neuron:
+        #newWeight = weight + alpha * err * gPrime(in) * Xj
+        #where in is the input value for the neuron in question
+        # and Xj is 
+        #point is the data point of comparison
+        newWeight = weight[index] + alpha * err * gPrime(hiddenInputs[index]) * point[index]
+        #newWeights.append(newWeight)
+        updatedHiddenWeights[idx].append(newWeight)
+    #updatedHiddenWeights.append(newWeights)
+"""
+
+def updateWeights(neurons, weights, inputs, alpha, err, point):
+    updated = np.zeros((len(weights), len(neurons)))
+    #if len(neurons) == 2:
+        #print(weights)
+    #updated = []
+    for index, neuron in enumerate(neurons):
+        #newWeights = []
+        for idx, weight in enumerate(weights):
+            if idx == 0:
+                x = 1
+            else:
+                x = inputs[index]
+                #gPrime(inputs[idx])?
+                #is activation at neuron j of previous layer
+
+                #inputs should be the activation from the previous layer
+                #before multiplying by weights
+            newWeight = weight[index] * alpha * err * gPrime(inputs[index]*weight[index]) * x
+            #if len(neurons) == 2:
+                #print(weight)
+                #print(newWeight)
+                #print()
+            #newWeights.append(newWeight)
+            updated[idx][index] = newWeight
+        #updated.append(newWeights)
+    return updated
+
+
+
+#TODO: what about X0 = 1?
+"""
+def updateWeights(neurons, weights, inputs, alpha, err, point):
+    updated = []
+    for index, neuron in enumerate(neurons):
+        newWeights = []
+        for weight in weights:
+            newWeight = weight[index] = alpha * err * gPrime(inputs[index]) * point[index]
+            newWeights.append(newWeight)
+        updated.append(newWeights)
+    return updated
+"""
+
+
+
+outputWeights = updateWeights(outputNeurons, outputWeights, finalInputs, alpha, err, point)
+hiddenWeights = updateWeights(hiddenNeurons, hiddenWeights, hiddenInputs, alpha, err, point)
+
+hiddenInputs, hiddenNeurons, finalInputs, outputNeurons = feedForward(initX)
+
+print(outputNeurons)
+#print(outputWeights)
+err = getError(outputNeurons, data[0])
+print(err)
+print()
+
+#outputWeights = np.array(updatedOutputWeights)
+#hiddenWeights = np.array(updatedHiddenWeights)
+
+
+#outputWeights = outputWeights.reshape(28, 2)
+#hiddenWeights = hiddenWeights.reshape(785, 28)
+
+
+outputWeights = updateWeights(outputNeurons, outputWeights, finalInputs, alpha, err, point)
+hiddenWeights = updateWeights(hiddenNeurons, hiddenWeights, hiddenInputs, alpha, err, point)
+
+hiddenInputs, hiddenNeurons, finalInputs, outputNeurons = feedForward(initX)
+
+print(outputNeurons)
+#print(outputWeights)
+err = getError(outputNeurons, data[0])
+print(err)
+print()
+"""
+
+outputWeights = updateWeights(outputNeurons, outputWeights, finalInputs, alpha, err, point)
+hiddenWeights = updateWeights(hiddenNeurons, hiddenWeights, hiddenInputs, alpha, err, point)
+
+hiddenInputs, hiddenNeurons, finalInputs, outputNeurons = feedForward(initX)
+
+print(outputNeurons)
+err = getError(outputNeurons, data[0])
+print(err)
+print()
+
+
+
+
+
+outputWeights = updateWeights(outputNeurons, outputWeights, finalInputs, alpha, err, point)
+hiddenWeights = updateWeights(hiddenNeurons, hiddenWeights, hiddenInputs, alpha, err, point)
+
+hiddenInputs, hiddenNeurons, finalInputs, outputNeurons = feedForward(initX)
+
+print(outputNeurons)
+err = getError(outputNeurons, data[0])
+print(err)
+print()
+
+
+
+
+
+outputWeights = updateWeights(outputNeurons, outputWeights, finalInputs, alpha, err, point)
+hiddenWeights = updateWeights(hiddenNeurons, hiddenWeights, hiddenInputs, alpha, err, point)
+
+hiddenInputs, hiddenNeurons, finalInputs, outputNeurons = feedForward(initX)
+
+print(outputNeurons)
+err = getError(outputNeurons, data[0])
+print(err)
+print()
+
+
+
+
+
+"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
