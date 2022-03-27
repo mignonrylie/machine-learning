@@ -307,7 +307,7 @@ for i in range(len(initWeights)):
     print(updatedTestWeights[i])
 """
 
-
+"""
 
 xs = np.array([-3, 2, -1])
 #wh = np.array([[-2, 0.5, 0.75], [-1.5, -4, 0.6]])
@@ -362,7 +362,51 @@ print(wo)
 wh = internalWeightUpdate(wh, alpha, np.array([xs]).T, np.array([dh]))
 print(wh)
         
+"""
 
+
+xs = np.array([data[0][1:]])
+wxh = np.random.uniform(-1, 1, size=(28, 784))
+hs = np.array([range(28)])
+who = np.random.uniform(-1, 1, size=(2, 28))
+out = np.array([range(2)])
+expected = np.zeros((1, 2)) #this can be up to 5
+expected[0][data[0][0]] = 1
+alpha = 0.01
+error = 0
+
+def predict(inputs, weights):
+    return g(np.dot(inputs, weights.T))
+
+def update(xs, wxh, hs, who, expected, out):
+    hs = predict(xs, wxh)
+    out = predict(hs, who)
+
+    error = np.sum(expected - out)
+
+    deltao = out * (1 - out) * error
+    deltah = hs * (1 - hs) * np.dot(deltao, who)
+
+    who = who + alpha * deltao.T * hs
+    wxh = wxh + alpha * deltah.T * xs
+
+    return hs, out, wxh, who, error
+
+count = 0
+error = 1
+
+xs = np.array([data[count][1:]])
+
+predicts = predict(xs, wxh)
+predicts = predict(hs, who)
+
+while abs(error) > 0.1:
+    xs = np.array([data[count+1][1:]])
+    hs, out, wxh, who, error = update(xs, wxh, hs, who, data[count][0], predict)
+    print(out)
+    print(error)
+    print()
+    count += 1
 
 
 
