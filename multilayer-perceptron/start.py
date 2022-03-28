@@ -346,11 +346,24 @@ def isGuessCorrect(output, index):
     return correct
 
 
+def classLabelToVector(expected, out):
+    vector = []
+    for index in range(len(out.flatten())):
+        if expected == index:
+            vector.append(1)
+        else:
+            vector.append(0)
+    return vector
+
 def update(xs, wxh, hs, who, expected, out, bh, bo):
     hs = predict(xs, wxh, bh)
     out = predict(hs, who, bo)
 
-    error = np.sum(expected - out)
+    #np.sum() for single value
+    
+
+    #error = expected - out
+    error = classLabelToVector(expected, out) - out
 
     deltao = out * (1 - out) * error
     deltah = hs * (1 - hs) * np.dot(deltao, who)
@@ -375,6 +388,64 @@ def errorWholeSet(samples, hiddenWeights, outputWeights, hiddenBiases, outputBia
             incorrect += 1
     return (correct), (incorrect)
 
+
+
+
+
+
+
+
+def feedForward(inputs, wxh, who):
+    hidden = g(np.dot(inputs, wxh.T))
+    out = g(np.dot(hidden, who.T))
+    return hidden, out
+
+def predictionError(expected, predicted):
+    return expected - predicted
+
+def calculateDeltas(out, error, hidden, who):
+    deltao = out * (1 - out) * error
+    deltah = hidden * (1 - hidden) * np.dot(deltao, who)
+    return deltao, deltah
+
+def updateWeights(who, alpha, deltao, hidden, wxh, deltah, inputs):
+    new_who = who + alpha * deltao.T * hidden
+    new_wxh = wxh + alpha * deltah.T * inputs
+    return new_who, new_wxh
+
+def outputToClassLabel(out):
+    max_val = 0
+    index = 0
+    out = out.flatten()
+    for idx, point in enumerate(out):
+        if point > max_val:
+            max_val = point
+            index = idx
+    return index
+
+def accuracy(data, wxh, who):
+    correct = 0
+    incorrect = 0
+    for sample in data:
+        point = np.array([sample[1:]])
+        classLabel = sample[0]
+
+        hidden, out = feedForward(point, wxh, who)
+        guessLabel = outputToClassLabel(out)
+
+        if guessLabel == classLabel:
+            correct += 1
+        else:
+            incorrect += 1
+
+    return correct, incorrect
+
+
+
+
+
+
+
 xs = np.array([data[0][1:]])
 wxh = np.random.uniform(-1, 1, size=(28, 784))
 hs = np.array([range(28)])
@@ -390,7 +461,6 @@ bo = np.array([0.5 for x in out])
 alpha = 0.01
 error = 0
 
-
 #xs = np.array([-3, 2, -1]) #test
 #wxh = np.array([[-2, 0.5], [0.5, -1.5], [0.75, 0.6]])
 #hs = np.array([])
@@ -399,17 +469,40 @@ error = 0
 #bh = 0
 sample = data[0]
 
-#hs, out, wxh, who, error, bh, bo = update(xs, wxh, hs, who, sample[0], predict, bh, bo)
+print("shapes:")
+print(xs.shape)
+print(wxh.shape)
+print(hs.shape)
+print(who.shape)
+print(out.shape)
 
-print(hs, out, wxh, who, error, bh, bo)
+
+
+print("initial accuracy:")
+print(accuracy(data, wxh, who))
 
 count = 0
-error = 1
+while count < 10
 
-#xs = np.array([data[count][1:]])
+hs, out = feedForward(xs, wxh, who)
+error = predictionError(data[0][0], out)
+print("error in guess:")
+print(classLabelToVector(data[0][0], out), out, error)
+deltao, deltah = calculateDeltas(out, error, hs, who)
+who, wxh = updateWeights(who, alpha, deltao, hs, wxh, deltah, xs)
+
+print("new accuracy:")
+print(accuracy(data, wxh, who))
+
+
+print("shapes")
+print(error.shape)
+print(deltao.shape)
+print(deltah.shape)
 
 
 
+"""
 samples = data
 epochs = 0
 incorrectRatio = 1
@@ -456,4 +549,4 @@ for i in range(10):
     print(finaloutput)
     showDrawing(testData[i])
     input("hit enter for next guess:")
-
+"""
